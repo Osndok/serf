@@ -604,6 +604,21 @@ func (s *Serf) State() SerfState {
 	return s.state
 }
 
+func (s *Serf) SetState(expected string, updated string) (string, error) {
+	s.stateLock.Lock()
+	defer s.stateLock.Unlock()
+
+	if (string(s.state) == expected) {
+		//HELP: if string-constants don't compare well with '==', need to convert back to known constant values
+		s.state=SerfState(updated)
+	} else {
+		return string(s.state), fmt.Errorf("Unexpected status, now %s", s.state)
+	}
+
+	//TODO: spread the word!
+	return string(s.state), nil
+}
+
 // broadcast takes a Serf message type, encodes it for the wire, and queues
 // the broadcast. If a notify channel is given, this channel will be closed
 // when the broadcast is sent.
@@ -804,7 +819,7 @@ func (s *Serf) handleNodeLeaveIntent(leaveMsg *messageLeave) bool {
 
 	// Refute us leaving if we are in the alive state
 	// Must be done in another goroutine since we have the memberLock
-	if leaveMsg.Node == s.config.NodeName && s.state == SerfAlive {
+	if leaveMsg.Node == s.config.NodeName && s.state.isAlive() {
 		s.logger.Printf("[DEBUG] serf: Refuting an older leave intent")
 		go s.broadcastJoin(s.clock.Time())
 		return false

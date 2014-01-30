@@ -189,6 +189,28 @@ func (c *RPCClient) Leave() error {
 	return c.genericRPC(&header, nil, nil)
 }
 
+func (c *RPCClient) Status() (string, error) {
+	header := requestHeader{
+		Command: statusCommand,
+		Seq:     c.getSeq(),
+	}
+	var resp statusResponse
+	err := c.genericRPC(&header, nil, &resp)
+	return resp.Status, err
+}
+
+func (c *RPCClient) UpdateStatus(expected string, updated string) error {
+	header := requestHeader{
+		Command: updateStatusCommand,
+		Seq:     c.getSeq(),
+	}
+	req := statusRequest{
+		Expected: expected,
+		Updated:  updated,
+	}
+	return c.genericRPC(&header, &req, nil)
+}
+
 type monitorHandler struct {
 	client *RPCClient
 	closed bool

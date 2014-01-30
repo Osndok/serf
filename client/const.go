@@ -19,6 +19,8 @@ const (
 	stopCommand       = "stop"
 	monitorCommand    = "monitor"
 	leaveCommand      = "leave"
+	statusCommand     = "status"
+	updateStatusCommand    = "update-status"
 )
 
 const (
@@ -51,6 +53,15 @@ type eventRequest struct {
 	Name     string
 	Payload  []byte
 	Coalesce bool
+}
+
+type statusRequest struct {
+	Expected string
+	Updated  string
+}
+
+type statusResponse struct {
+	Status string
 }
 
 type forceLeaveRequest struct {

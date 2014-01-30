@@ -51,6 +51,8 @@ const (
 	stopCommand       = "stop"
 	monitorCommand    = "monitor"
 	leaveCommand      = "leave"
+	statusCommand       = "status"
+	updateStatusCommand = "update-status"
 )
 
 const (
@@ -96,6 +98,15 @@ type joinRequest struct {
 
 type joinResponse struct {
 	Num int32
+}
+
+type statusRequest struct {
+	Expected string
+	Updated  string
+}
+
+type statusResponse struct {
+	Status string
 }
 
 type membersResponse struct {
@@ -364,6 +375,12 @@ func (i *AgentIPC) handleRequest(client *IPCClient, reqHeader *requestHeader) er
 	case leaveCommand:
 		return i.handleLeave(client, seq)
 
+	case statusCommand:
+		return i.handleStatus(client, seq)
+
+	case updateStatusCommand:
+		return i.handleUpdateStatus(client, seq)
+
 	default:
 		respHeader := responseHeader{Seq: seq, Error: unsupportedCommand}
 		client.Send(&respHeader, nil)
@@ -446,6 +463,42 @@ func (i *AgentIPC) handleJoin(client *IPCClient, seq uint64) error {
 	}
 	return client.Send(&header, &resp)
 }
+
+func (i *AgentIPC) handleStatus(client *IPCClient, seq uint64) error {
+	serf := i.agent.Serf()
+
+	header := responseHeader{
+		Seq:   seq,
+		Error: "",
+	}
+	resp := statusResponse{
+		Status: string(serf.State()),
+	}
+	return client.Send(&header, &resp)
+}
+
+func (i *AgentIPC) handleUpdateStatus(client *IPCClient, seq uint64) error {
+	var req statusRequest
+	if err := client.dec.Decode(&req); err != nil {
+		return fmt.Errorf("decode failed: %v", err)
+	}
+
+	serf := i.agent.Serf()
+
+	status, err := serf.SetState(req.Expected, req.Updated)
+ 
+	header := responseHeader{
+		Seq:   seq,
+		Error: errToString(err),
+	}
+
+	resp := statusResponse{
+		Status: status,
+	}
+
+	return client.Send(&header, &resp)
+}
+
 
 func (i *AgentIPC) handleMembers(client *IPCClient, seq uint64) error {
 	serf := i.agent.Serf()

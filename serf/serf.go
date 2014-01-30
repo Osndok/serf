@@ -119,32 +119,15 @@ type Member struct {
 }
 
 // MemberStatus is the state that a member is in.
-type MemberStatus int
+type MemberStatus string
 
 const (
-	StatusNone MemberStatus = iota
-	StatusAlive
-	StatusLeaving
-	StatusLeft
-	StatusFailed
+	StatusNone MemberStatus = "none"
+	StatusAlive             = "alive"
+	StatusLeaving           = "leaving"
+	StatusLeft              = "left"
+	StatusFailed            = "failed"
 )
-
-func (s MemberStatus) String() string {
-	switch s {
-	case StatusNone:
-		return "none"
-	case StatusAlive:
-		return "alive"
-	case StatusLeaving:
-		return "leaving"
-	case StatusLeft:
-		return "left"
-	case StatusFailed:
-		return "failed"
-	default:
-		panic(fmt.Sprintf("unknown MemberStatus: %d", s))
-	}
-}
 
 // memberState is used to track members that are no longer active due to
 // leaving, failing, partitioning, etc. It tracks the member along with
@@ -737,7 +720,7 @@ func (s *Serf) handleNodeLeave(n *memberlist.Node) {
 	}
 
 	// Update some metrics
-	metrics.IncrCounter([]string{"serf", "member", member.Status.String()}, 1)
+	metrics.IncrCounter([]string{"serf", "member", string(member.Status)}, 1)
 
 	s.logger.Printf("[INFO] serf: %s: %s %s",
 		eventStr, member.Member.Name, member.Member.Addr)

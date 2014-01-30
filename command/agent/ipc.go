@@ -458,7 +458,7 @@ func (i *AgentIPC) handleMembers(client *IPCClient, seq uint64) error {
 			Addr:        m.Addr,
 			Port:        m.Port,
 			Tags:        m.Tags,
-			Status:      m.Status.String(),
+			Status:      string(m.Status),
 			ProtocolMin: m.ProtocolMin,
 			ProtocolMax: m.ProtocolMax,
 			ProtocolCur: m.ProtocolCur,

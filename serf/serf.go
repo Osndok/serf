@@ -75,28 +75,25 @@ type Serf struct {
 }
 
 // SerfState is the state of the Serf instance.
-type SerfState int
+type SerfState string
 
 const (
-	SerfAlive SerfState = iota
-	SerfLeaving
-	SerfLeft
-	SerfShutdown
+	SerfAlive   SerfState = "alive"
+	SerfLeaving           = "leaving"
+	SerfLeft              = "left"
+	SerfShutdown          = "shutdown"
 )
 
-func (s SerfState) String() string {
+func (s SerfState) isAlive() bool {
 	switch s {
-	case SerfAlive:
-		return "alive"
 	case SerfLeaving:
-		return "leaving"
 	case SerfLeft:
-		return "left"
 	case SerfShutdown:
-		return "shutdown"
+		return false;
 	default:
-		return "unknown"
+		return true;
 	}
+	return true;
 }
 
 // Member is a single member of the Serf cluster.
@@ -128,6 +125,19 @@ const (
 	StatusLeft              = "left"
 	StatusFailed            = "failed"
 )
+
+func (s MemberStatus) isAlive() bool {
+	switch s {
+	case StatusNone:
+	case StatusLeaving:
+	case StatusLeft:
+	case StatusFailed:
+		return false;
+	default:
+		return true;
+	}
+	return true;
+}
 
 // memberState is used to track members that are no longer active due to
 // leaving, failing, partitioning, etc. It tracks the member along with
@@ -364,7 +374,7 @@ func (s *Serf) SetTags(tags map[string]string) error {
 // user messages sent prior to the join will be ignored.
 func (s *Serf) Join(existing []string, ignoreOld bool) (int, error) {
 	// Do a quick state check
-	if s.State() != SerfAlive {
+	if ! s.State().isAlive() {
 		return 0, fmt.Errorf("Serf can't Join after Leave or Shutdown")
 	}
 

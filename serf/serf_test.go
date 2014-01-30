@@ -733,18 +733,12 @@ func TestMemberStatus_String(t *testing.T) {
 	expect := []string{"none", "alive", "leaving", "left", "failed"}
 
 	for idx, s := range status {
-		if s.String() != expect[idx] {
-			t.Fatalf("got string %v, expected %v", s.String(), expect[idx])
+		if string(s) != expect[idx] {
+			t.Fatalf("got string %v, expected %v", string(s), expect[idx])
 		}
 	}
 
-	other := MemberStatus(100)
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatalf("expected panic")
-		}
-	}()
-	other.String()
+	//MemberStatus can now be whatever string the other machine provides us...
 }
 
 func TestSerf_joinLeaveJoin(t *testing.T) {
